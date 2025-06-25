@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Segurança da Informação</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Cybersecurity Calm -->
+    <!-- Application Structure Plan: O aplicativo é estruturado como um dashboard de página única com três seções temáticas principais: "Fundamentos", "Ameaças e Vetores" e "Defesas e Ferramentas". Essa estrutura, diferente da ordem linear do relatório, agrupa conceitos relacionados para facilitar a compreensão e a comparação. A navegação é feita por uma barra superior fixa, permitindo ao usuário explorar os tópicos de forma não linear. Cada seção utiliza cartões interativos, diagramas e gráficos para apresentar as informações de forma visual e concisa, priorizando a usabilidade e o engajamento do que uma simples leitura de texto. Foram adicionados conteúdos da Cartilha do CERT.br para aprofundar temas como fraudes online e segurança de senhas. -->
+    <!-- Visualization & Content Choices: Os conceitos do relatório foram transformados em elementos interativos. Os "Pilares da Segurança" e "Catálogo de Malwares" são diagramas de cartões clicáveis que exibem informações em uma área dedicada, evitando modais. A comparação de criptografia é feita com tabela. Os tipos de fraude online usam um seletor interativo. O gráfico de "Incidentes Reportados" foi atualizado com dados inspirados nas estatísticas do CERT.br. Uma "Dica de Segurança" sobre senhas foi adicionada para fornecer conselhos práticos. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link.active {
+            color: #0891b2;
+            border-bottom-color: #0891b2;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .card {
+            transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 40;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            max-height: 90vh;
+        }
+        .fraud-btn.active {
+            background-color: #0891b2;
+            color: white;
+        }
+    </style>
+</head>
+<body class="text-slate-700">
+
+    <header class="bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-30">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-cyan-800">Segurança da Informação</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#fundamentos" class="nav-link text-lg font-medium text-slate-600 hover:text-cyan-600 border-b-2 border-transparent">Fundamentos</a>
+                <a href="#ameacas" class="nav-link text-lg font-medium text-slate-600 hover:text-cyan-600 border-b-2 border-transparent">Ameaças e Vetores</a>
+                <a href="#defesas" class="nav-link text-lg font-medium text-slate-600 hover:text-cyan-600 border-b-2 border-transparent">Defesas e Ferramentas</a>
+            </div>
+            <div class="md:hidden">
+                <select id="mobile-nav" class="bg-white border border-slate-300 rounded-md p-2">
+                    <option value="fundamentos">Fundamentos</option>
+                    <option value="ameacas">Ameaças e Vetores</option>
+                    <option value="defesas">Defesas e Ferramentas</option>
+                </select>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        
+        <section id="fundamentos" class="content-section space-y-12">
+            <div class="text-center">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-2">Fundamentos da Cibersegurança</h2>
+                <p class="max-w-3xl mx-auto text-lg text-slate-600">Esta seção explora os conceitos essenciais que formam a base da segurança da informação. Entenda os pilares que sustentam a proteção de dados e as técnicas criptográficas que garantem a confidencialidade e a integridade.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-2xl font-bold text-center text-slate-800 mb-6">Os 5 Pilares da Segurança da Informação</h3>
+                <div id="pilares-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 text-center">
+                </div>
+                <div id="pilar-info" class="mt-6 p-4 bg-cyan-50 border-l-4 border-cyan-500 rounded-r-lg min-h-[100px]">
+                    <p class="text-slate-700">Clique em um pilar acima para ver sua descrição.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Criptografia: Simétrica vs. Assimétrica</h3>
+                    <p class="mb-6 text-slate-600">A criptografia é usada para proteger dados, mas existem duas abordagens principais. A simétrica usa uma única chave secreta, enquanto a assimétrica usa um par de chaves: uma pública e uma privada.</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr>
+                                    <th class="border-b-2 p-3 bg-slate-50">Característica</th>
+                                    <th class="border-b-2 p-3 bg-slate-50">Simétrica (ex: AES)</th>
+                                    <th class="border-b-2 p-3 bg-slate-50">Assimétrica (ex: RSA)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border-b p-3 font-semibold">Chaves</td>
+                                    <td class="border-b p-3">Uma única chave secreta</td>
+                                    <td class="border-b p-3">Par de chaves (Pública/Privada)</td>
+                                </tr>
+                                <tr>
+                                    <td class="border-b p-3 font-semibold">Velocidade</td>
+                                    <td class="border-b p-3">Muito Rápida</td>
+                                    <td class="border-b p-3">Lenta</td>
+                                </tr>
+                                <tr>
+                                    <td class="border-b p-3 font-semibold">Uso Principal</td>
+                                    <td class="border-b p-3">Cifrar grandes volumes de dados</td>
+                                    <td class="border-b p-3">Troca segura de chaves, Assinaturas</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-semibold">Desafio</td>
+                                    <td class="p-3">Compartilhar a chave secreta</td>
+                                    <td class="p-3">Verificar a autenticidade da chave pública</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Dica de Segurança: Senhas Fortes</h3>
+                    <p class="mb-4 text-slate-600">De acordo com a cartilha do CERT.br, uma senha segura é a sua primeira linha de defesa. Siga estas regras:</p>
+                    <ul class="list-disc list-inside space-y-2 text-slate-600">
+                        <li><span class="font-semibold">Comprimento:</span> Use no mínimo 14 caracteres.</li>
+                        <li><span class="font-semibold">Complexidade:</span> Misture letras maiúsculas, minúsculas, números e símbolos.</li>
+                        <li><span class="font-semibold">Exclusividade:</span> Crie senhas únicas para cada serviço. Não as reutilize!</li>
+                        <li><span class="font-semibold">Evite o óbvio:</span> Não use datas de aniversário, nomes de familiares ou sequências como "123456".</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="ameacas" class="content-section space-y-12">
+            <div class="text-center">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-2">Ameaças e Vetores de Ataque</h2>
+                <p class="max-w-3xl mx-auto text-lg text-slate-600">Nesta seção, exploramos as ferramentas e táticas dos atacantes. Conheça os diferentes tipos de software malicioso (malware) e as fraudes online mais comuns que podem ser exploradas.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                 <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Principais Incidentes Reportados (Brasil)</h3>
+                    <p class="mb-4 text-slate-600">Dados inspirados nas estatísticas do CERT.br mostram que fraudes e phishing são as ameaças mais comuns reportadas por usuários, superando as infecções por malware tradicionais.</p>
+                     <div class="chart-container relative w-full max-w-lg mx-auto h-80">
+                        <canvas id="incidentsChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                     <h3 class="text-2xl font-bold text-slate-800 mb-4">Os 3 Fatores de Autenticação</h3>
+                    <p class="mb-6 text-slate-600">A autenticação verifica a identidade de um usuário. Os métodos são classificados em três fatores. A combinação de mais de um fator (MFA) aumenta drasticamente a segurança.</p>
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-4">
+                            <div class="bg-cyan-100 text-cyan-700 p-3 rounded-full text-2xl">🧠</div>
+                            <div>
+                                <h4 class="font-bold">1. Algo que você sabe</h4>
+                                <p>Senhas, PINs, respostas secretas. É o fator mais comum, mas vulnerável a adivinhação, phishing e vazamentos.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <div class="bg-cyan-100 text-cyan-700 p-3 rounded-full text-2xl">📱</div>
+                            <div>
+                                <h4 class="font-bold">2. Algo que você possui</h4>
+                                <p>Tokens, smartcards, celular. É mais seguro, mas o objeto físico pode ser roubado ou clonado.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                             <div class="bg-cyan-100 text-cyan-700 p-3 rounded-full text-2xl">👆</div>
+                            <div>
+                                <h4 class="font-bold">3. Algo que você é (ou faz)</h4>
+                                <p>Biometria como impressão digital, rosto ou voz. É conveniente, mas se a base de dados vazar, a biometria é comprometida para sempre.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-2xl font-bold text-center text-slate-800 mb-4">Tipos de Fraude Online (Golpes)</h3>
+                <p class="text-center max-w-3xl mx-auto mb-6 text-slate-600">Além do malware, os golpes (scams) são uma forma comum de ataque. Eles usam engenharia social para enganar a vítima. Clique para saber mais sobre cada tipo.</p>
+                <div id="fraud-types-nav" class="flex flex-wrap justify-center gap-2 mb-4">
+                </div>
+                <div id="fraud-info" class="p-4 bg-slate-50 rounded-lg min-h-[150px]">
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-2xl font-bold text-center text-slate-800 mb-6">Catálogo de Malwares</h3>
+                <div id="malware-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                </div>
+                <div id="malware-info" class="mt-6 p-4 bg-cyan-50 border-l-4 border-cyan-500 rounded-r-lg min-h-[100px]">
+                    <p class="text-slate-700">Clique em um tipo de malware acima para ver sua descrição.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="defesas" class="content-section space-y-12">
+            <div class="text-center">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-2">Defesas e Ferramentas</h2>
+                <p class="max-w-3xl mx-auto text-lg text-slate-600">Para combater as ameaças, existe um arsenal de ferramentas e estratégias. Aprenda sobre as principais linhas de defesa, desde a filtragem de tráfego até a detecção proativa de intrusos e boas práticas diárias.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-2xl font-bold text-center text-slate-800 mb-6">Ferramentas de Proteção Essenciais</h3>
+                <div id="defense-tools-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-2xl font-bold text-center text-slate-800 mb-6">Anatomia de um Ataque e Defesa</h3>
+                <p class="text-center max-w-2xl mx-auto mb-8 text-slate-600">Um ataque cibernético típico segue etapas previsíveis. As defesas são projetadas para intervir em cada uma dessas fases.</p>
+                <div class="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="text-center p-4 rounded-lg bg-slate-50 w-full md:w-1/4">
+                        <p class="font-bold text-red-600">Ataque: Fase 1</p>
+                        <p class="text-lg font-semibold">Descoberta</p>
+                        <p class="text-sm">(Nmap, nslookup)</p>
+                    </div>
+                    <div class="text-2xl text-slate-400 font-bold">→</div>
+                    <div class="text-center p-4 rounded-lg bg-slate-50 w-full md:w-1/4">
+                        <p class="font-bold text-red-600">Ataque: Fase 2</p>
+                        <p class="text-lg font-semibold">Análise</p>
+                        <p class="text-sm">(Nessus)</p>
+                    </div>
+                     <div class="text-2xl text-slate-400 font-bold">→</div>
+                    <div class="text-center p-4 rounded-lg bg-slate-50 w-full md:w-1/4">
+                        <p class="font-bold text-red-600">Ataque: Fase 3</p>
+                        <p class="text-lg font-semibold">Exploração</p>
+                        <p class="text-sm">(Malware, Phishing)</p>
+                    </div>
+                </div>
+                <div class="text-5xl text-center text-slate-400 my-2">↓</div>
+                 <div class="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="text-center p-4 rounded-lg bg-cyan-50 border-t-4 border-cyan-500 w-full md:w-1/4">
+                        <p class="font-bold text-cyan-700">Defesa: Camada 1</p>
+                        <p class="text-lg font-semibold">Firewall</p>
+                        <p class="text-sm">(Filtra acessos)</p>
+                    </div>
+                    <div class="text-2xl text-slate-400 font-bold">↔</div>
+                    <div class="text-center p-4 rounded-lg bg-cyan-50 border-t-4 border-cyan-500 w-full md:w-1/4">
+                        <p class="font-bold text-cyan-700">Defesa: Camada 2</p>
+                        <p class="text-lg font-semibold">IDS/IPS</p>
+                        <p class="text-sm">(Detecta anomalias)</p>
+                    </div>
+                     <div class="text-2xl text-slate-400 font-bold">↔</div>
+                    <div class="text-center p-4 rounded-lg bg-cyan-50 border-t-4 border-cyan-500 w-full md:w-1/4">
+                        <p class="font-bold text-cyan-700">Defesa: Camada 3</p>
+                        <p class="text-lg font-semibold">Antivírus & Educação</p>
+                        <p class="text-sm">(Bloqueia e previne)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="modal" class="modal-backdrop">
+        <div class="bg-white rounded-xl shadow-2xl w-11/12 max-w-2xl modal-content overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 id="modal-title" class="text-2xl font-bold"></h3>
+                <button id="modal-close" class="text-slate-500 hover:text-slate-800 text-2xl">&times;</button>
+            </div>
+            <div id="modal-body" class="p-6">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const data = {
+            pilares: [
+                { id: 'confidencialidade', nome: 'Confidencialidade', desc: 'Garante que a informação só é acessível por pessoas autorizadas. É o pilar que impede o acesso indevido a dados sensíveis, geralmente através de criptografia.' },
+                { id: 'integridade', nome: 'Integridade', desc: 'Assegura que a informação se mantém íntegra, completa e inalterada, exceto por modificações autorizadas. Funções de hash e MACs são usadas para verificar a integridade.' },
+                { id: 'disponibilidade', nome: 'Disponibilidade', desc: 'Garante que os sistemas e dados estejam disponíveis para usuários autorizados sempre que necessário. Protege contra ataques de negação de serviço (DDoS).' },
+                { id: 'autenticidade', nome: 'Autenticidade', desc: 'Garante que a origem da informação é genuína. Confirma que o remetente é quem diz ser, prevenindo falsificações.' },
+                { id: 'irretratabilidade', nome: 'Irretratabilidade', desc: 'Também conhecido como Não Repúdio, impede que um usuário negue ter realizado uma ação ou enviado uma mensagem. Assinaturas digitais são o principal mecanismo para isso.' }
+            ],
+            malwares: [
+                { nome: 'Vírus', desc: 'Precisa de um programa "hospedeiro" para se anexar e se propagar. É ativado quando o hospedeiro é executado.' },
+                { nome: 'Worm', desc: 'É autônomo e se propaga ativamente pela rede, explorando vulnerabilidades sem a necessidade de interação do usuário.' },
+                { nome: 'Cavalo de Tróia', desc: 'Disfarça-se de software legítimo, mas executa ações maliciosas em segundo plano após a instalação.' },
+                { nome: 'Ransomware', desc: 'Criptografa os arquivos da vítima e exige um pagamento (resgate) para fornecer a chave de descriptografia.' },
+                { nome: 'Spyware', desc: 'Coleta secretamente informações sobre as atividades do usuário, como senhas e dados de navegação, e as envia para um atacante.' },
+                { nome: 'Rootkit', desc: 'O tipo mais perigoso. Obtém acesso privilegiado (root) ao sistema, permitindo que se esconda e controle o computador completamente.' },
+                { nome: 'Botnet/Zumbi', desc: 'Um computador infectado que é controlado remotamente por um "mestre" para realizar ataques em massa, como DDoS ou envio de spam.' },
+                { nome: 'Keylogger', desc: 'Um tipo de spyware que registra todas as teclas digitadas pelo usuário, visando capturar senhas e informações confidenciais.' }
+            ],
+            defesas: [
+                { nome: 'Firewall', desc: 'Atua como uma barreira entre uma rede interna confiável e uma rede externa não confiável (como a internet). Ele filtra o tráfego de entrada e saída com base em um conjunto de regras de segurança.' },
+                { nome: 'IDS / IPS', desc: 'Sistema de Detecção/Prevenção de Intrusão. O IDS monitora a rede em busca de atividades maliciosas e alerta. O IPS é uma versão ativa que também tenta bloquear as ameaças identificadas.' },
+                { nome: 'Honeypot', desc: 'Um "pote de mel" é um sistema que serve como isca, projetado para atrair e desviar a atenção de atacantes, permitindo que os defensores estudem suas táticas.' },
+                { nome: 'Segurança Móvel', desc: 'Proteger seu celular é crucial. Cuidado com permissões de aplicativos, use senhas de bloqueio, evite redes Wi-Fi públicas para transações sensíveis e ative a localização remota.' }
+            ],
+            fraudes: [
+                { nome: 'Phishing', desc: 'É o tipo de fraude pela qual um golpista tenta obter dados pessoais e financeiros de um usuário, pela utilização combinada de meios técnicos e engenharia social. Ocorre por meio do envio de mensagens falsas, que podem chegar por e-mails, SMS, redes sociais, etc. O objetivo é induzir o usuário a clicar em links que o levam a sites falsos ou que instalam malwares.' },
+                { nome: 'Scam (Golpe)', desc: 'Termo genérico para qualquer esquema ou golpe que usa a internet para enganar as pessoas e obter ganhos financeiros. Inclui falsas ofertas de emprego, prêmios de loteria, falsos pedidos de caridade e oportunidades de investimento fraudulentas. Geralmente promete grandes benefícios em troca de um pequeno pagamento inicial.' },
+                { nome: 'Boatos (Hoax)', desc: 'São mensagens com conteúdo alarmante ou falso que se espalham rapidamente pela internet. Embora nem sempre visem ganho financeiro direto, podem causar pânico, desinformação e, em alguns casos, conter links para malwares ou phishing. A principal característica é o apelo para que sejam repassadas ao maior número de pessoas.'}
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const mobileNav = document.getElementById('mobile-nav');
+            const sections = document.querySelectorAll('.content-section');
+            const modal = document.getElementById('modal');
+            const modalClose = document.getElementById('modal-close');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+
+            function showSection(id) {
+                sections.forEach(section => {
+                    section.classList.toggle('active', section.id === id);
+                });
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.hash === '#' + id);
+                });
+                if (mobileNav.value !== id) {
+                    mobileNav.value = id;
+                }
+            }
+            
+            function setupNavigation() {
+                navLinks.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const targetId = e.currentTarget.hash.substring(1);
+                        showSection(targetId);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                });
+                mobileNav.addEventListener('change', (e) => {
+                    showSection(e.target.value);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            function showModal(title, content) {
+                modalTitle.textContent = title;
+                modalBody.innerHTML = content;
+                modal.style.display = 'flex';
+            }
+
+            function hideModal() {
+                modal.style.display = 'none';
+            }
+
+            modalClose.addEventListener('click', hideModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    hideModal();
+                }
+            });
+
+            function populatePilares() {
+                const container = document.getElementById('pilares-container');
+                const infoBox = document.getElementById('pilar-info');
+                data.pilares.forEach(pilar => {
+                    const div = document.createElement('div');
+                    div.className = 'card p-4 bg-slate-100 rounded-lg cursor-pointer hover:bg-cyan-100';
+                    div.textContent = pilar.nome;
+                    div.addEventListener('click', () => {
+                        infoBox.innerHTML = `<h4 class="font-bold text-lg text-cyan-800">${pilar.nome}</h4><p class="text-slate-700">${pilar.desc}</p>`;
+                        document.querySelectorAll('#pilares-container .card').forEach(c => c.classList.remove('bg-cyan-200'));
+                        div.classList.add('bg-cyan-200');
+                    });
+                    container.appendChild(div);
+                });
+            }
+            
+            function populateFraudes() {
+                const navContainer = document.getElementById('fraud-types-nav');
+                const infoBox = document.getElementById('fraud-info');
+                data.fraudes.forEach((fraude, index) => {
+                    const btn = document.createElement('button');
+                    btn.textContent = fraude.nome;
+                    btn.className = 'fraud-btn px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-700 hover:bg-cyan-600 hover:text-white transition';
+                    btn.addEventListener('click', () => {
+                        infoBox.innerHTML = `<h4 class="font-bold text-lg text-cyan-800">${fraude.nome}</h4><p class="text-slate-700">${fraude.desc}</p>`;
+                        document.querySelectorAll('.fraud-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    });
+                    navContainer.appendChild(btn);
+                    if (index === 0) {
+                        btn.click();
+                    }
+                });
+            }
+
+            function populateMalware() {
+                const grid = document.getElementById('malware-grid');
+                const infoBox = document.getElementById('malware-info');
+                data.malwares.forEach(m => {
+                    const card = document.createElement('div');
+                    card.className = 'card text-center p-4 bg-slate-100 rounded-lg cursor-pointer hover:bg-cyan-100 flex items-center justify-center h-24';
+                    card.innerHTML = `<span class="font-semibold text-slate-800">${m.nome}</span>`;
+                    card.addEventListener('click', () => {
+                        infoBox.innerHTML = `<h4 class="font-bold text-lg text-cyan-800">${m.nome}</h4><p class="text-slate-700">${m.desc}</p>`;
+                        document.querySelectorAll('#malware-grid .card').forEach(c => c.classList.remove('bg-cyan-200'));
+                        card.classList.add('bg-cyan-200');
+                    });
+                    grid.appendChild(card);
+                });
+            }
+
+            function populateDefesas() {
+                const grid = document.getElementById('defense-tools-grid');
+                 data.defesas.forEach(d => {
+                    const card = document.createElement('div');
+                    card.className = 'card text-left p-6 bg-slate-50 rounded-lg cursor-pointer h-full';
+                    card.innerHTML = `<h4 class="text-xl font-bold text-cyan-800 mb-2">${d.nome}</h4><p class="text-slate-600">${d.desc}</p>`;
+                    grid.appendChild(card);
+                });
+            }
+
+            function createCharts() {
+                const incidentsCtx = document.getElementById('incidentsChart').getContext('2d');
+                new Chart(incidentsCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Scam / Fraude', 'Phishing', 'Malware', 'Ataque a Servidor', 'Outros'],
+                        datasets: [{
+                            label: 'Incidentes Reportados a Notificadores',
+                            data: [45, 30, 10, 8, 7],
+                            backgroundColor: ['#ef4444', '#f97316', '#eab308', '#0ea5e9', '#64748b'],
+                        }]
+                    },
+                     options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            title: {
+                                display: false
+                            }
+                        }
+                    },
+                });
+            }
+
+            setupNavigation();
+            showSection('fundamentos');
+            populatePilares();
+            populateFraudes();
+            populateMalware();
+            populateDefesas();
+            createCharts();
+        });
+    </script>
+</body>
+</html>
